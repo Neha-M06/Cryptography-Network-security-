@@ -1,80 +1,68 @@
 import random
+from sympy import isprime
 
-# Helper: Modular exponentiation
-def modular_exponentiation(base, exp, mod):
-    return pow(base, exp, mod)
+def mod_exp(base, exp, mod):
+    """Perform modular exponentiation."""
+    result = 1
+    while exp > 0:
+        if exp % 2 == 1:
+            result = (result * base) % mod
+        base = (base * base) % mod
+        exp //= 2
+    return result
 
-# Helper: Generate a random prime number
-def generate_prime(start, end):
-    def is_prime(n):
-        if n <= 1:
-            return False
-        for i in range(2, int(n ** 0.5) + 1):
-            if n % i == 0:
-                return False
-        return True
+def generate_prime(bits=10):
+    """Generate a random prime number of the specified bit length."""
+    while True:
+        num = random.randint(2**(bits-1), 2**bits - 1)
+        if isprime(num):
+            return num
 
-    prime = random.randint(start, end)
-    while not is_prime(prime):
-        prime = random.randint(start, end)
-    return prime
+def elgamal_encrypt(plain_text, e1, e2, p, r):
+    """Encrypt the plaintext string using ElGamal encryption."""
+    c1 = mod_exp(e1, r, p)
+    c2 = [(ord(char) * mod_exp(e2, r, p)) % p for char in plain_text]
+    return c1, c2
 
-# ElGamal Key Generation
-def generate_keys():
-    # Step 1: Choose a large prime p
-    p = generate_prime(100, 200)  # For simplicity; use larger primes in practice
+def elgamal_decrypt(c1, c2, p, d):
+    """Decrypt the ciphertext back to the plaintext string."""
+    s = mod_exp(c1, d, p)
+    s_inv = pow(s, -1, p)  # Modular multiplicative inverse of s mod p
+    plain_text = ''.join([chr((char * s_inv) % p) for char in c2])
+    return plain_text
 
-    # Step 2: Choose a generator e1 (primitive root modulo p)
+def main():
+    # Input plaintext
+    plain_text = input("Enter the plaintext: ")
+
+    # Generate large prime number p
+    p = generate_prime(bits=16)
+    
+    # Choose e1 (primitive root) and private key d
     e1 = random.randint(2, p - 2)
+    d = random.randint(2, p - 2)
+    
+    # Compute e2 = (e1^d) mod p
+    e2 = mod_exp(e1, d, p)
 
-    # Step 3: Choose a private key d (1 <= d <= p-2)
-    d = random.randint(1, p - 2)
+    # Choose random r
+    r = random.randint(2, p - 2)
 
-    # Step 4: Compute e2 = (e1^d) mod p
-    e2 = modular_exponentiation(e1, d, p)
+    # Encrypt the plaintext
+    c1, c2 = elgamal_encrypt(plain_text, e1, e2, p, r)
+    
+    # Decrypt the ciphertext
+    decrypted_text = elgamal_decrypt(c1, c2, p, d)
 
-    return p, e1, e2, d  # Public key: (p, e1, e2); Private key: d
+    # Display results
+    print("\nElGamal Encryption")
+    print(f"Prime number (p): {p}")
+    print(f"Primitive root (e1): {e1}")
+    print(f"Private key (d): {d}")
+    print(f"Public key (e2): {e2}")
+    print(f"Random number (r): {r}")
+    print(f"Ciphertext (c1, c2): ({c1}, {c2})")
+    print(f"Decrypted text: {decrypted_text}")
 
-# ElGamal Encryption
-def encrypt(message, public_key):
-    p, e1, e2 = public_key
-    r = random.randint(1, p - 2)  # Random integer 1 <= r <= p-2
-
-    # Step 1: Compute c1 = (e1^r) mod p
-    c1 = modular_exponentiation(e1, r, p)
-
-    # Step 2: Compute c2 = (m * (e2^r)) mod p for each character in the message
-    c2 = [(ord(char) * modular_exponentiation(e2, r, p)) % p for char in message]
-
-    return c1, c2, r
-
-# ElGamal Decryption
-def decrypt(c1, c2, private_key, p):
-    d = private_key
-
-    # Step 1: Compute (c1^d) mod p
-    c1_d = modular_exponentiation(c1, d, p)
-
-    # Step 2: Compute the modular inverse of (c1^d) mod p
-    c1_d_inverse = pow(c1_d, -1, p)
-
-    # Step 3: Recover the original message
-    message = ''.join([chr((char * c1_d_inverse) % p) for char in c2])
-
-    return message
-
-# Example Usage
-p, e1, e2, d = generate_keys()
-print(f"Public Key: (p={p}, e1={e1}, e2={e2})")
-print(f"Private Key: d={d}")
-
-# Encrypt a message
-message = "WONDERFUL"
-print(f"Original Message: {message}")
-
-c1, c2, r = encrypt(message, (p, e1, e2))
-print(f"Ciphertext: c1={c1}, c2={c2}, r={r}")
-
-# Decrypt the message
-decrypted_message = decrypt(c1, c2, d, p)
-print(f"Decrypted Message: {decrypted_message}")
+if __name__ == "__main__":
+    main()

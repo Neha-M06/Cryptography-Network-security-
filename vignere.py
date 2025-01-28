@@ -1,54 +1,52 @@
 def vigenere_encrypt(plaintext, key):
-    """
-    Encrypts the plaintext using the Vigenère cipher.
-    """
-    encrypted_text = []
-    key = key.upper()
+    ciphertext = ""
     key_index = 0
+    key = key.upper()
 
     for char in plaintext:
         if char.isalpha():
             shift = ord(key[key_index]) - ord('A')
-            if char.islower():
-                encrypted_char = chr((ord(char) - ord('a') + shift) % 26 + ord('a'))
+            if char.isupper():
+                ciphertext += chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
             else:
-                encrypted_char = chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
-            encrypted_text.append(encrypted_char)
+                ciphertext += chr((ord(char) - ord('a') + shift) % 26 + ord('a'))
             key_index = (key_index + 1) % len(key)
         else:
-            encrypted_text.append(char)  # Non-alphabetic characters remain unchanged
-
-    return ''.join(encrypted_text)
+            ciphertext += char
+    return ciphertext
 
 
 def vigenere_decrypt(ciphertext, key):
-    """
-    Decrypts the ciphertext using the Vigenère cipher.
-    """
-    decrypted_text = []
-    key = key.upper()
+    plaintext = ""
     key_index = 0
+    key = key.upper()
 
     for char in ciphertext:
         if char.isalpha():
             shift = ord(key[key_index]) - ord('A')
-            if char.islower():
-                decrypted_char = chr((ord(char) - ord('a') - shift + 26) % 26 + ord('a'))
+            if char.isupper():
+                plaintext += chr((ord(char) - ord('A') - shift) % 26 + ord('A'))
             else:
-                decrypted_char = chr((ord(char) - ord('A') - shift + 26) % 26 + ord('A'))
-            decrypted_text.append(decrypted_char)
+                plaintext += chr((ord(char) - ord('a') - shift) % 26 + ord('a'))
             key_index = (key_index + 1) % len(key)
         else:
-            decrypted_text.append(char)  # Non-alphabetic characters remain unchanged
+            plaintext += char
+    return plaintext
 
-    return ''.join(decrypted_text)
 
+if __name__ == "__main__":
+    print("Vigenère Cipher")
+    choice = input("Do you want to (E)ncrypt or (D)ecrypt? ").strip().upper()
 
-# Example usage:
-plaintext = "HELLO WORLD"
-key = "KEY"
-ciphertext = vigenere_encrypt(plaintext, key)
-print(f"Encrypted: {ciphertext}")
-
-decrypted = vigenere_decrypt(ciphertext, key)
-print(f"Decrypted: {decrypted}")
+    if choice in ['E', 'D']:
+        text = input("Enter the text: ").strip()
+        key = input("Enter the key: ").strip()
+        
+        if choice == 'E':
+            result = vigenere_encrypt(text, key)
+            print("Encrypted Text:", result)
+        else:
+            result = vigenere_decrypt(text, key)
+            print("Decrypted Text:", result)
+    else:
+        print("Invalid choice. Please select either 'E' or 'D'.")

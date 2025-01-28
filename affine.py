@@ -1,70 +1,66 @@
-
-# affine_cipher.py
-from math import gcd
-
+# Function to find modular inverse
 def modular_inverse(a, m):
-    """
-    Finds the modular inverse of a under modulo m using the extended Euclidean algorithm.
-    Returns None if the modular inverse does not exist.
-    """
-    if gcd(a, m) != 1:
-        return None  # Inverse doesn't exist if a and m are not coprime
     for x in range(1, m):
         if (a * x) % m == 1:
             return x
     return None
 
-def affine_encrypt(plaintext, a, b):
-    """
-    Encrypts the given plaintext using the Affine Cipher.
-    """
-    m = 26  # Size of the alphabet
-    if gcd(a, m) != 1:
-        raise ValueError("'a' must be coprime with 26.")
-
-    ciphertext = ""
-    for char in plaintext:
-        if char.isalpha():
-            offset = 65 if char.isupper() else 97
-            x = ord(char) - offset
-            encrypted_char = (a * x + b) % m + offset
-            ciphertext += chr(encrypted_char)
+# Function to encrypt text using the Affine Cipher
+def affine_encrypt(text, a, b):
+    result = ""
+    for char in text:
+        if char.isalpha():  # Encrypt only alphabetic characters
+            if char.isupper():
+                result += chr(((a * (ord(char) - 65) + b) % 26) + 65)
+            else:
+                result += chr(((a * (ord(char) - 97) + b) % 26) + 97)
         else:
-            ciphertext += char
-    return ciphertext
+            result += char  # Non-alphabetic characters are not encrypted
+    return result
 
-def affine_decrypt(ciphertext, a, b):
-    """
-    Decrypts the given ciphertext using the Affine Cipher.
-    """
-    m = 26  # Size of the alphabet
-    a_inv = modular_inverse(a, m)
-    if a_inv is None:
-        raise ValueError("'a' has no modular inverse under modulo 26.")
-
-    plaintext = ""
-    for char in ciphertext:
-        if char.isalpha():
-            offset = 65 if char.isupper() else 97
-            y = ord(char) - offset
-            decrypted_char = (a_inv * (y - b)) % m + offset
-            plaintext += chr(decrypted_char)
+# Function to decrypt text using the Affine Cipher
+def affine_decrypt(text, a, b):
+    a_inverse = modular_inverse(a, 26)
+    if a_inverse is None:
+        raise ValueError("Multiplicative inverse for 'a' does not exist. Choose a different value of 'a'.")
+    result = ""
+    for char in text:
+        if char.isalpha():  # Decrypt only alphabetic characters
+            if char.isupper():
+                result += chr(((a_inverse * ((ord(char) - 65) - b)) % 26) + 65)
+            else:
+                result += chr(((a_inverse * ((ord(char) - 97) - b)) % 26) + 97)
         else:
-            plaintext += char
-    return plaintext
+            result += char  # Non-alphabetic characters are not decrypted
+    return result
 
-# Example usage
+# Main function to get input from the user
 def main():
-    plaintext = "AffineCipherExample"
-    a, b = 5, 8
+    print("Affine Cipher")
+    print("1: Encrypt")
+    print("2: Decrypt")
+    choice = input("Choose an option (1 or 2): ")
 
-    print("Plaintext:", plaintext)
+    if choice not in ["1", "2"]:
+        print("Invalid choice.")
+        return
 
-    encrypted = affine_encrypt(plaintext, a, b)
-    print("Encrypted:", encrypted)
+    text = input("Enter the text: ")
+    a = int(input("Enter the value of 'a' (must be coprime with 26): "))
+    b = int(input("Enter the value of 'b': "))
 
-    decrypted = affine_decrypt(encrypted, a, b)
-    print("Decrypted:", decrypted)
+    # Ensure 'a' is coprime with 26
+    if modular_inverse(a, 26) is None:
+        print("'a' must be coprime with 26. Try again.")
+        return
+
+    if choice == "1":
+        encrypted_text = affine_encrypt(text, a, b)
+        print("Encrypted Text:", encrypted_text)
+    elif choice == "2":
+
+        decrypted_text = affine_decrypt(text, a, b)
+        print("Decrypted Text:", decrypted_text)
 
 if __name__ == "__main__":
     main()
